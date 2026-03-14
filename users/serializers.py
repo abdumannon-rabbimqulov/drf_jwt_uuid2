@@ -1,5 +1,6 @@
 from django.contrib.auth import authenticate
 from rest_framework import serializers
+
 from .models import CustomUser
 from shared.utility import check_email_or_phone, check_email_or_phone_or_username
 from .models import (
@@ -266,4 +267,61 @@ class LoginSerializers(TokenObtainSerializer):
 #         return True
 #
 
+class ForgotPasswordSerializers(serializers.Serializer):
+    user_input=serializers.CharField(required=True,write_only=True)
+
+    def validate(self, attrs):
+        user_data=attrs.get('user_input',None)
+        if not user_data:
+            raise ValidationError({'message':'email,username yoki telefon raqam kiriting'})
+        user=CustomUser.objects.filter(
+            Q(username=user_data) | Q(email=user_data) | Q(phone_number=user_data)).first()
+        if not user:
+            raise ValidationError(detail="xato malumot kiritdingiz yoki ro'yxatdan o'tmagansiz")
+        user_type=check_email_or_phone_or_username(user_data)
+
+        if user_type=='phone':
+            code = user.generate_code(VIA_PHONE)
+            print(code, 'ppppppppppppppppppppppp')
+        elif user_type=='email':
+            code=send_email(user)
+        elif user_type=='username':
+            if user.phone_number:
+                code = user.generate_code(VIA_PHONE)
+                print(code, 'ppppppppppppppppppppppp')
+            elif user.email:
+                code = send_email(user)
+            else:
+                raise ValidationError(detail="siz to'liq ro'yxatdan o'tmagansiz ")
+
+        response={
+            'status':status.HTTP_201_CREATED,
+            'message':'Kodingiz yuborildi',
+            'refresh':user.token()['refresh'],
+            'access':user.token()['access']
+        }
+        return response
+
+
+
+
+class ResetPasswordSerializers(serializers.Serializer):
+    password=serializers.CharField(required=True,write_only=True)
+    conf_password=serializers.CharField(required=True,write_only=True)
+
+    def validate(self, attrs):
+        password=attrs.get('password')
+        conf_password=attrs.get('conf_password')
+        if  password!=conf_password:
+            raise ValidationError({'message':'parollar mos emas'})
+        elif len(password)<7:
+            raise ValidationError({'message':'parol 8 ta belgidan kam bolmasligi kerak'})
+        return attrs
+
+    def update(self, instance, validated_data):
+        validated_data.pop('conf_password')
+        password=validated_data.get('password')
+        instance.set_password(password)
+        instance.save()
+        return instance
 

@@ -163,3 +163,57 @@ class RefreshTokenView(APIView):
                 'access':str(refresh_token.access_token)
             }
         return Response(response)
+
+
+class ForgotPasswordView(APIView):
+    permission_classes = (AllowAny, )
+    def post(self,request):
+        serializer=ForgotPasswordSerializers(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        response_data = serializer.validated_data
+        response = {
+            'status': status.HTTP_200_OK,
+            "message": response_data.get('message'),
+            "access": response_data.get('access'),
+            "refresh": response_data.get('refresh'),
+        }
+        return Response(response)
+
+
+class ResetPasswordCodeView(APIView):
+    permission_classes = (IsAuthenticated, )
+    def post(self,request):
+        code=self.request.data.get('code')
+        user=self.request.user
+        user_code = CodeVerify.objects.filter(code=code, user=user,
+                                              expiration_time__gte=datetime.now(), is_active=True
+                                              )
+        if not user_code.exists():
+            raise ValidationError({
+                'status': status.HTTP_400_BAD_REQUEST,
+                'message': "Kodingiz xato yoki eskirgan"
+            })
+        else:
+            user_code.update(is_active=False)
+
+
+        response = {
+            'status': status.HTTP_200_OK,
+            'message': 'Kodingiz tasdiqlandi',
+        }
+        return Response(response)
+
+
+
+class ResetPasswordView(APIView):
+    permission_classes = (IsAuthenticated, )
+    def post(self,request):
+        user=request.user
+        serializer=ResetPasswordSerializers(data=request.data,instance=user)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+        response={
+            'status':status.HTTP_200_OK,
+            'message':"Siz muffaqiyatli parolizni tikladiz",
+        }
+        return Response(response)
