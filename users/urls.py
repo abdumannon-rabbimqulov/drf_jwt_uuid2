@@ -14,6 +14,9 @@ urlpatterns=[
     path('forgot-password/',ForgotPasswordView.as_view()),
     path('reset-code/',ResetPasswordCodeView.as_view()),
     path('reset-password/',ResetPasswordView.as_view()),
-    path('post-create/',PostCreateView.as_view())
+    path('post-create/',PostCreateView.as_view()),
+    path('list-post/',PostListView.as_view()),
+    path('post-update/<int:pk>/',PostUpdateView.as_view()),
+    path('post-delete/<int:pk>/',PostDeleteView.as_view()),
 ]
 

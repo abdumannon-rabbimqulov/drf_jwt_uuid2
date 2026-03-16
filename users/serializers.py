@@ -153,6 +153,7 @@ class UserPhotoSerializers(serializers.Serializer):
         instance.save()
         return instance
 
+
 class LoginSerializers(TokenObtainSerializer):
     password=serializers.CharField(required=True,write_only=True)
 
@@ -267,6 +268,8 @@ class LoginSerializers(TokenObtainSerializer):
 #         return True
 #
 
+
+
 class ForgotPasswordSerializers(serializers.Serializer):
     user_input=serializers.CharField(required=True,write_only=True)
 
@@ -304,7 +307,6 @@ class ForgotPasswordSerializers(serializers.Serializer):
 
 
 
-
 class ResetPasswordSerializers(serializers.Serializer):
     password=serializers.CharField(required=True,write_only=True)
     conf_password=serializers.CharField(required=True,write_only=True)
@@ -325,12 +327,14 @@ class ResetPasswordSerializers(serializers.Serializer):
         instance.save()
         return instance
 
+
 class PostSerializers(serializers.ModelSerializer):
     created_at = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S", read_only=True)
 
     class Meta:
         model = Post
         fields = [
+            'id',
             'text',
             'image',
             'video',

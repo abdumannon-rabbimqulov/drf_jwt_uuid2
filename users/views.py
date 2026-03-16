@@ -1,7 +1,9 @@
-from functools import partial
-
-from rest_framework.generics import CreateAPIView,UpdateAPIView
+from rest_framework.generics import (CreateAPIView,
+                                     UpdateAPIView, ListAPIView,
+                                     RetrieveAPIView, DestroyAPIView, get_object_or_404
+                                     )
 from rest_framework.permissions import AllowAny,IsAuthenticated
+from rest_framework import permissions
 from .models import (
     CustomUser,CodeVerify,NEW,
     CODE_VERIFY,DONE,PHOTO_DONE,
@@ -17,6 +19,11 @@ from shared.views import send_email
 from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.tokens import RefreshToken
 
+
+
+class IsAuthor(permissions.BasePermission):
+    def has_object_permission(self, request, view, obj):
+        return obj.auth==request.user
 
 class SignUpView(CreateAPIView):
     permission_classes = (AllowAny, )
@@ -256,3 +263,43 @@ class PostUpdateView(UpdateAPIView):
 
     def perform_update(self, serializer):
         serializer.save()
+
+class PostListView(ListAPIView):
+    permission_classes = (IsAuthenticated,)
+    serializer_class = PostSerializers
+
+    def get_queryset(self):
+        user=self.request.user
+        return Post.objects.filter(auth=user).order_by('-created_at')
+
+    def list(self, request, *args, **kwargs):
+        queryset=self.get_queryset()
+        serializer=self.get_serializer(queryset,many=True)
+
+        response={
+            'status':status.HTTP_200_OK,
+            'message':'sizning postlariz',
+            "user": request.user.username,
+            'data':serializer.data
+        }
+        return Response(response)
+
+class PostDeleteView(DestroyAPIView):
+    permission_classes = (IsAuthenticated,IsAuthor)
+    queryset = Post.objects.all()
+    serializer_class = PostSerializers
+
+    def destroy(self, request, *args, **kwargs):
+        try:
+            instance = self.get_object()
+            self.perform_destroy(instance)
+            response={
+                'status':status.HTTP_200_OK,
+                'message':"malumot o'chirildi",
+            }
+        except Exception:
+            response = {
+                'status': status.HTTP_400_BAD_REQUEST,
+                'message': "malumot topilmadi",
+            }
+        return Response(response)
