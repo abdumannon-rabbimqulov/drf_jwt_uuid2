@@ -217,3 +217,4 @@ class ResetPasswordView(APIView):
             'message':"Siz muffaqiyatli parolizni tikladiz",
         }
         return Response(response)
+
