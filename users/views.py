@@ -317,6 +317,26 @@ class PostDetailView(APIView):
         }
 
         return Response(response)
+    def post(self,request,pk):
+        user=self.request.user
+
+        if not user.is_authenticated:
+            raise ValidationError({'message':"siz ro'yxatdan o'tmagansiz "})
+
+        postlike, Like=PostLike.objects.get_or_create(
+            auth=user,
+            post_id=pk,
+        )
+
+        if not Like:
+            postlike.delete()
+            return Response({'message':"like o'chirildi"})
+
+        response={
+            'status':status.HTTP_201_CREATED,
+            "message":"like bosildi"
+        }
+        return Response(response)
 
 """          Comment      """
 
