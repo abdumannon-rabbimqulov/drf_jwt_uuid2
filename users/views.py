@@ -303,3 +303,49 @@ class PostDeleteView(DestroyAPIView):
                 'message': "malumot topilmadi",
             }
         return Response(response)
+
+class CommentCreateView(APIView):
+    permission_classes = (IsAuthenticated, )
+    def post(self,request):
+        post_id=self.request.data.get('post_id')
+        text=self.request.data.get('text')
+        post=get_object_or_404(Post,id=post_id)
+        comment=Comment.objects.create(
+            auth=self.request.user,
+            post_id=post_id,
+            text=text
+        )
+
+        response={
+            'status':status.HTTP_201_CREATED,
+            'message':'comment qoshildi',
+            'comment':comment.id
+        }
+
+        return Response(response)
+
+class CommentUpdateView(APIView):
+    permission_classes = (IsAuthenticated, )
+    def post(self,request):
+        comment_id=self.request.data.get('comment_id')
+        new_text=self.request.data.get('text')
+        comment=Comment.objects.get(id=comment_id,auth=self.request.user)
+        comment.text=new_text
+        comment.save()
+
+        response={
+            'status':status.HTTP_200_OK,
+            'message':'comment yangilandi',
+        }
+        return Response(response)
+
+class CommentListView(ListAPIView):
+    permission_classes = (IsAuthenticated, )
+    serializer_class = CommentSerializers
+
+    def get_queryset(self):
+        user=self.request.user
+        return Comment.objects.filter(auth=user)
+
+class CommentDeleteView(DestroyAPIView):
+    pass

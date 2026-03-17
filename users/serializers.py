@@ -341,3 +341,9 @@ class PostSerializers(serializers.ModelSerializer):
             'created_at'
         ]
 
+class CommentSerializers(serializers.ModelSerializer):
+    created_at = serializers.DateTimeField(format="%Y-%m-%d %H:%M:%S", read_only=True)
+
+    class Meta:
+        model=Comment
+        fields=('id','post','text','created_at')
