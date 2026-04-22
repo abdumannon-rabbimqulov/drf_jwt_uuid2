@@ -129,7 +129,6 @@ class LoginView(TokenObtainPairView):
 #                  "email": user.email
 #              }
 #         }
-#salom
 #         return Response(data)
 
 
